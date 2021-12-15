@@ -44,7 +44,7 @@ while [ "$1" != "" ]; do
         --configuration)
             shift
             __configuration=$1
-            ;;          
+            ;;
         --stripsymbols)
             __strip_argument="-DSTRIP_SYMBOLS=true"
             ;;
@@ -98,7 +98,7 @@ fi
 OSName=$(uname -s)
 case $OSName in
     Darwin)
-        
+
         # PyTorch is specifyin options that require OpenMP support but AppleClang's  OpenMP support is lacking e.g. -fopenmp not supported
         # See    https://github.com/oneapi-src/oneDNN/issues/591 for this potential workaround, though it may be better
         # to switch to brew clang.
@@ -118,4 +118,4 @@ echo "Building Machine Learning native components from $DIR to $(pwd)"
 set -x # turn on trace
 cmake "$DIR" -G "Unix Makefiles" $__cmake_defines
 set +x # turn off trace
-make install
+make install -j

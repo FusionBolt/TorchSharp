@@ -44,7 +44,7 @@ namespace TorchSharp
             //   lib.so.11.3
             @".*\.so(\.\d*)*";
         static bool nativeBackendLoaded = false;
-        static bool nativeBackendCudaLoaded = false;
+        // static bool nativeBackendCudaLoaded = false;
 
         internal static bool TryLoadNativeLibraryFromFile(string path, StringBuilder trace) {
             bool ok;
@@ -76,137 +76,17 @@ namespace TorchSharp
 
         private static void LoadNativeBackend(bool useCudaBackend, out StringBuilder trace)
         {
-
-            var alreadyLoaded = useCudaBackend ? nativeBackendCudaLoaded : nativeBackendLoaded;
-            trace = null;
-            if (!alreadyLoaded) {
-                trace = new StringBuilder();
-                bool ok;
-
-                trace.AppendLine($"");
-                trace.AppendLine($"TorchSharp: LoadNativeBackend: Initialising native backend, useCudaBackend = {useCudaBackend}");
-                trace.AppendLine($"");
-                trace.AppendLine($"Step 1 - First try regular load of native libtorch binaries.");
-                trace.AppendLine($"");
-
-                // Workarounds for weird LibTorch native stuff
-                // See https://github.com/pytorch/pytorch/issues/33415
-                if (useCudaBackend) {
-                    var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-                    if (isWindows) {
-                        trace.AppendLine($"    Try loading Windows cuda native components");
-                        // Preloading these DLLs on windows seems to iron out problems where one native DLL
-                        // requests a load of another through dynamic linking techniques.  
-                        // 
-                        TryLoadNativeLibraryByName("cudnn_adv_infer64_8", typeof(torch).Assembly, trace);
-                        TryLoadNativeLibraryByName("cudnn_adv_train64_8", typeof(torch).Assembly, trace);
-                        TryLoadNativeLibraryByName("cudnn_cnn_infer64_8", typeof(torch).Assembly, trace);
-                        TryLoadNativeLibraryByName("cudnn_cnn_train64_8", typeof(torch).Assembly, trace);
-                        TryLoadNativeLibraryByName("cudnn_ops_infer64_8", typeof(torch).Assembly, trace);
-                        TryLoadNativeLibraryByName("cudnn_ops_train64_8", typeof(torch).Assembly, trace);
-                        TryLoadNativeLibraryByName("nvrtc-builtins64_113", typeof(torch).Assembly, trace);
-                        TryLoadNativeLibraryByName("caffe2_nvrtc", typeof(torch).Assembly, trace);
-                        TryLoadNativeLibraryByName("nvrtc64_112_0", typeof(torch).Assembly, trace);
-                    }
-                    TryLoadNativeLibraryByName("torch_cuda", typeof(torch).Assembly, trace);
-                    ok = TryLoadNativeLibraryByName("LibTorchSharp", typeof(torch).Assembly, trace);
-                } else {
-                    TryLoadNativeLibraryByName("torch_cpu", typeof(torch).Assembly, trace);
-                    ok = TryLoadNativeLibraryByName("LibTorchSharp", typeof(torch).Assembly, trace);
+            trace = new StringBuilder();
+            if (!nativeBackendLoaded)
+            {
+                var ok = TryLoadNativeLibraryByName("LibTorchSharp", typeof(torch).Assembly, trace);
+                if (!ok)
+                {
+                    var message = $"load libtorchsharp failed";
+                    Console.WriteLine(message);
+                    throw new NotSupportedException(message);
                 }
-
-                trace.AppendLine($"    Result from regular native load of LibTorchSharp is {ok}");
-
-                // Try dynamic load from package directories
-                if (!ok) {
-
-                    trace.AppendLine($"");
-                    trace.AppendLine($"Step 3 - Alternative load from consolidated directory of native binaries from nuget packages");
-                    trace.AppendLine($"");
-
-                    var cpuRootPackage = "libtorch-cpu";
-                    var cudaRootPackage = $"libtorch-cuda-{cudaVersion}-{nativeRid}";
-                    var target =
-                        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "LibTorchSharp.dll" :
-                        RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "libLibTorchSharp.dylib" :
-                        "libLibTorchSharp.so";
-
-                    // See https://github.com/dotnet/TorchSharp/issues/169
-                    //
-                    // If we are loading in .NET Interactive or F# Interactive, these are in packages in separate
-                    // package directories. For managed DLLs this works OK, but native DLLs do not load transitive dependencies.
-                    //
-                    // So we shadow copy the DLLs into the TorchSharp package, make a copy of the native DLL and continue
-                    // with the dynamic load
-                    //
-                    // Assumed to be in ...\packages\torchsharp\0.3.0-local-debug-20200918\lib\net5.0\TorchSharp.dll
-                    //
-                    // TODO: on linux make these copies link not shadow-copy
-                    var torchsharpLoc = Path.GetDirectoryName(typeof(torch).Assembly.Location);
-                    var packagesDir = Path.GetFullPath(Path.Combine(torchsharpLoc, "..", "..", "..", ".."));
-                    var torchsharpHome = Path.GetFullPath(Path.Combine(torchsharpLoc, "..", ".."));
-
-                    trace.AppendLine($"    torchsharpLoc = {torchsharpLoc}");
-                    trace.AppendLine($"    packagesDir = {packagesDir}");
-                    trace.AppendLine($"    torchsharpHome = {torchsharpHome}");
-
-                    if (torchsharpLoc.Contains("torchsharp") && torchsharpLoc.Contains("lib") && Directory.Exists(packagesDir) && Directory.Exists(torchsharpHome)) {
-
-                        var torchSharpVersion = Path.GetFileName(torchsharpHome); // really GetDirectoryName
-
-                        if (useCudaBackend) {
-                            var consolidatedDir = Path.Combine(torchsharpLoc, $"cuda-{cudaVersion}");
-
-                            trace.AppendLine($"    Trying dynamic load for .NET/F# Interactive by consolidating native {cudaRootPackage}-* binaries to {consolidatedDir}...");
-
-                            var cudaOk = CopyNativeComponentsIntoSingleDirectory(packagesDir, $"{cudaRootPackage}-*", libtorchPackageVersion, consolidatedDir, trace);
-                            if (cudaOk) {
-                                cudaOk = CopyNativeComponentsIntoSingleDirectory(packagesDir, "torchsharp", torchSharpVersion, consolidatedDir, trace);
-                                if (cudaOk) {
-                                    var consolidated = Path.Combine(consolidatedDir, target);
-                                    ok = TryLoadNativeLibraryFromFile(consolidated, trace);
-                                }
-                            }
-                            if (!cudaOk) {
-                                var message = $"The {cudaRootPackage} package version {libtorchPackageVersion} is not restored on this system. If using F# Interactive or .NET Interactive you may need to add a reference to this package, e.g. \n    #r \"nuget: {cudaRootPackage}, {libtorchPackageVersion}\". Trace from LoadNativeBackend:\n{trace}";
-                                Console.WriteLine(message);
-                                throw new NotSupportedException(message);
-                            }
-                        } else {
-                            var consolidatedDir = Path.Combine(torchsharpLoc, $"cpu");
-
-                            trace.AppendLine($"    Trying dynamic load for .NET/F# Interactive by consolidating native {cpuRootPackage}-* binaries to {consolidatedDir}...");
-
-                            var cpuOk = CopyNativeComponentsIntoSingleDirectory(packagesDir, cpuRootPackage, libtorchPackageVersion, consolidatedDir, trace);
-                            if (cpuOk) {
-                                cpuOk = CopyNativeComponentsIntoSingleDirectory(packagesDir, "torchsharp", torchSharpVersion, consolidatedDir, trace);
-                                if (cpuOk) {
-                                    var consolidated = Path.Combine(consolidatedDir, target);
-                                    ok = TryLoadNativeLibraryFromFile(consolidated, trace);
-                                }
-                            }
-                            if (!cpuOk) {
-                                var message = $"The {cpuRootPackage} package version {libtorchPackageVersion} is not restored on this system. If using F# Interactive or .NET Interactive you may need to add a reference to this package, e.g. \n    #r \"nuget: {cpuRootPackage}, {libtorchPackageVersion}\". Trace from LoadNativeBackend:\n{trace}";
-                                Console.WriteLine(message);
-                                throw new NotSupportedException(message);
-                            }
-                        }
-                    }
-                    else {
-                        trace.AppendLine("    Giving up, TorchSharp.dll does not appear to have been loaded from package directories");
-                    }
-                    if (!ok) {
-                        var message = $"This application uses TorchSharp but doesn't contain reference to either {cudaRootPackage} or {cpuRootPackage}, {libtorchPackageVersion}. Consider either referencing one of these packages or call System.Runtime.InteropServices.NativeLibrary.Load(path-to-{target}) explicitly for a Python install or a download of libtorch.so/torch.dll. See https://github.com/dotnet/TorchSharp/issues/169.\". Trace from LoadNativeBackend:\n{trace}";
-                        Console.WriteLine(message);
-                        throw new NotSupportedException(message);
-                    }
-                }
-
-                // Record the successful load
-                if (useCudaBackend)
-                    nativeBackendCudaLoaded = true;
-                else
-                    nativeBackendLoaded = true;
+                nativeBackendLoaded = true;
             }
         }
 
@@ -269,7 +149,7 @@ namespace TorchSharp
                 var result = cuda.CallTorchCudaIsAvailable();
                 if (!result)
                     throw new InvalidOperationException($"Torch device type {deviceType} did not initialise on the current machine. Trace from LoadNativeBackend:\n{trace}");
-            } 
+            }
         }
 
         public static Device InitializeDevice(torch.Device device)

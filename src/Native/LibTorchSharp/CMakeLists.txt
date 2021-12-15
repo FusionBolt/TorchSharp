@@ -55,9 +55,14 @@ endif()
 # Add libTorch bindings
 include_directories(${TORCH_INCLUDE_DIRS})
 
-add_library(LibTorchSharp SHARED ${SOURCES} ${RESOURCES})
+file(GLOB TORCH_STATIC_LIBS /home/homura/Documents/LibA/*.a)
 
-target_link_libraries(LibTorchSharp ${TORCH_LIBRARIES})
+add_library(LibTorchSharp SHARED ${SOURCES} ${RESOURCES} )
+
+target_link_libraries(LibTorchSharp
+	"-Wl,--whole-archive"
+	${TORCH_LIBRARIES}
+	"-Wl,--no-whole-archive")
 
 set_property(TARGET LibTorchSharp PROPERTY CXX_STANDARD 14)
 
