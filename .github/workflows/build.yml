@@ -16,6 +16,24 @@ jobs:
           touch test.txt
           echo "mol" > test.txt
 
+      - name: 'win'
+        if: runner.os == 'Windows'
+        run: |
+          - touch test_win.txt
+          echo "mol win" > test.txt
+
+      - name: 'linux'
+        if: runner.os == 'Windows'
+        run: |
+          - touch test_linux.txt
+          echo "mol linux" > test.txt
+
+      - name: 'mac'
+        if: runner.os == 'Windows'
+        run: |
+          - touch test_mac.txt
+          echo "mol mac" > test.txt
+
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
