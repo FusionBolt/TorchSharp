@@ -1,10 +1,6 @@
 name: .NET
 
-on:
-  push:
-    branches: [ feature/rebuild-ir ]
-  pull_request:
-    branches: [ feature/rebuild-ir ]
+on: [push]
 
 jobs:
   build:
