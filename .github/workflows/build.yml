@@ -12,7 +12,9 @@ jobs:
         # os: [ubuntu-18.04,windows-2019,macos-10.15]
     steps:
       - name: 'mk text'
-        run: touch test.txt
+        run: |
+          touch test.txt
+          echo "mol" > test.txt
 
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
