@@ -16,7 +16,6 @@
     <ArchiveShaFile>$(IntermediateOutputPath)$(ArchiveBaseName)$(ArchiveExtension).sha</ArchiveShaFile>
     <ExtractDirectory>$(IntermediateOutputPath)$(LocalBaseName)</ExtractDirectory>
     <ExtractSemaphore>$(ExtractDirectory)\.extracted</ExtractSemaphore>
-    <LocalShaFile>$(MSBuildProjectDirectory)\$(ArchiveBaseName)$(ArchiveExtension).sha</LocalShaFile>
     <LicenseUrl>https://raw.githubusercontent.com/pytorch/pytorch/master/LICENSE</LicenseUrl>
     <DownloadedLicenseFolder>$(IntermediateOutputPath)</DownloadedLicenseFolder>
     <DownloadedLicenseFileName>LICENSE-LIBTORCH</DownloadedLicenseFileName>
@@ -24,7 +23,7 @@
     <MainPackageFolder>$(PackagePreparationPath)$(MSBuildProjectName)-$(TargetRuntimeID)</MainPackageFolder>
     <CopyToPackageSemaphore>$(MainPackageFolder)\.copied.SkipTests.$(SkipTests).IncludeLibTorchCpuPackages.$(IncludeLibTorchCpuPackages)</CopyToPackageSemaphore>
   </PropertyGroup>
-  
+
   <ItemGroup Condition="'$(TargetOS)' == 'windows'">
     <File Include="libtorch\lib\asmjit.dll" />
     <File Include="libtorch\lib\c10.dll" />
@@ -86,24 +85,24 @@
   <!-- Validate and extract Archive for Libtorch -->
   <Target Name="ValidateAndExtractArchives" DependsOnTargets="DownloadArchive" Inputs="$(DownloadedArchive)" Outputs="$(ExtractSemaphore)">
     <Message Importance="High" Text="GetFileHash $(DownloadedArchive)" />
-    <GetFileHash  Files="$(DownloadedArchive)">  <Output TaskParameter="Hash" PropertyName="DownloadedArchiveHash" /> </GetFileHash>
-    <WriteLinesToFile File="$(ArchiveShaFile)" Lines="$(DownloadedArchiveHash)" Overwrite="true" />
+<!--    <GetFileHash  Files="$(DownloadedArchive)">  <Output TaskParameter="Hash" PropertyName="DownloadedArchiveHash" /> </GetFileHash>-->
+<!--    <WriteLinesToFile File="$(ArchiveShaFile)" Lines="$(DownloadedArchiveHash)" Overwrite="true" />-->
 
-    <!-- If specified we'll update the checked in SHAs with the downloaded ones. -->
-    <Copy Condition="'$(UpdateSHA)' == 'true'" SourceFiles="$(ArchiveShaFile)" DestinationFiles="$(LocalShaFile)" />
+<!--    &lt;!&ndash; If specified we'll update the checked in SHAs with the downloaded ones. &ndash;&gt;-->
+<!--    <Copy Condition="'$(UpdateSHA)' == 'true'" SourceFiles="$(ArchiveShaFile)" DestinationFiles="$(LocalShaFile)" />-->
 
-    <Error Condition="!Exists('$(LocalShaFile)')" Text="SHA file '$(LocalShaFile)' does not exist.  Build with /p:UpdateSHA=true to save it." />
+<!--    <Error Condition="!Exists('$(LocalShaFile)')" Text="SHA file '$(LocalShaFile)' does not exist.  Build with /p:UpdateSHA=true to save it." />-->
 
-    <!-- Read in the SHAs as metadata on the archive items -->
-    <ItemGroup>
-      <Archive>
-        <LocalSha>$([System.IO.File]::ReadAllText('$(LocalShaFile)'))</LocalSha>
-        <DownloadSha>$([System.IO.File]::ReadAllText('$(ArchiveShaFile)'))</DownloadSha>
-      </Archive>
-    </ItemGroup>
+<!--    &lt;!&ndash; Read in the SHAs as metadata on the archive items &ndash;&gt;-->
+<!--    <ItemGroup>-->
+<!--      <Archive>-->
+<!--        <LocalSha>$([System.IO.File]::ReadAllText('$(LocalShaFile)'))</LocalSha>-->
+<!--        <DownloadSha>$([System.IO.File]::ReadAllText('$(ArchiveShaFile)'))</DownloadSha>-->
+<!--      </Archive>-->
+<!--    </ItemGroup>-->
 
-    <!-- Validate that the downloaded SHAs match the expected checked in SHAs -->
-    <Error Condition="'%(Archive.LocalSha)' != '%(Archive.DownloadSha)'" Text="Downloaded file '$(DownloadedArchive)' has unexpected SHA.%0A  expected: %(Archive.LocalSha)%0A  actual: %(Archive.DownloadSha)%0ABuild with /p:UpdateSHA=true if you intentionally changed the URL and wish to update the SHAs, otherwise this could indicate an incomplete download or intercerpted URL and should be examined." />
+<!--    &lt;!&ndash; Validate that the downloaded SHAs match the expected checked in SHAs &ndash;&gt;-->
+<!--    <Error Condition="'%(Archive.LocalSha)' != '%(Archive.DownloadSha)'" Text="Downloaded file '$(DownloadedArchive)' has unexpected SHA.%0A  expected: %(Archive.LocalSha)%0A  actual: %(Archive.DownloadSha)%0ABuild with /p:UpdateSHA=true if you intentionally changed the URL and wish to update the SHAs, otherwise this could indicate an incomplete download or intercerpted URL and should be examined." />-->
 
     <!-- The archives are valid, lets extract them, ensuring an empty directory -->
     <RemoveDir Directories="$(ExtractDirectory)" />

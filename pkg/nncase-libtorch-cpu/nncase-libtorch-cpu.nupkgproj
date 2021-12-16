@@ -5,9 +5,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-     <ProjectReference Include="../libtorch-cpu-linux-x64/libtorch-cpu-linux-x64.nupkgproj" />
-     <ProjectReference Include="../libtorch-cpu-osx-x64/libtorch-cpu-osx-x64.nupkgproj" />
-     <ProjectReference Include="../libtorch-cpu-win-x64/libtorch-cpu-win-x64.nupkgproj" />
+     <ProjectReference Include="../nncase-libtorch-cpu-linux-x64/nncase-libtorch-cpu-linux-x64.nupkgproj" />
+     <ProjectReference Include="../nncase-libtorch-cpu-osx-x64/nncase-libtorch-cpu-osx-x64.nupkgproj" />
+     <ProjectReference Include="../nncase-libtorch-cpu-win-x64/nncase-libtorch-cpu-win-x64.nupkgproj" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">

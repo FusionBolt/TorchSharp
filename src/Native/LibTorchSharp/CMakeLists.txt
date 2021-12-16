@@ -55,6 +55,8 @@ endif()
 # Add libTorch bindings
 include_directories(${TORCH_INCLUDE_DIRS})
 
+message(STATUS "this is a message")
+message(STATUS ${TORCH_INCLUDE_DIRS})
 file(GLOB TORCH_STATIC_LIBS /home/homura/Documents/LibA/*.a)
 
 add_library(LibTorchSharp SHARED ${SOURCES} ${RESOURCES} )
