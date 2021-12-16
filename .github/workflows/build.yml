@@ -21,18 +21,21 @@ jobs:
         run: |
           touch test_win.txt
           echo "mol win" > test.txt
+          echo "mol win" > test_win.txt
 
       - name: 'linux'
-        if: runner.os == 'Windows'
+        if: runner.os == 'Linux'
         run: |
           touch test_linux.txt
           echo "mol linux" > test.txt
+          echo "mol linux" > test_linux.txt
 
       - name: 'mac'
-        if: runner.os == 'Windows'
+        if: runner.os == 'Macos'
         run: |
           touch test_mac.txt
           echo "mol mac" > test.txt
+          echo "mol mac" > test_mac.txt
 
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
