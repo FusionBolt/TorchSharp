@@ -1,0 +1,40 @@
+name: .NET
+
+on:
+  push:
+    branches: [ feature/rebuild-ir ]
+  pull_request:
+    branches: [ feature/rebuild-ir ]
+
+jobs:
+  build:
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-18.04,windows-2019,macos-10.15]
+        # os: [ubuntu-18.04,windows-2019,macos-10.15]
+    steps:
+      - name: 'mk text'
+        run: touch test.txt
+
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: true
+          title: "Development Build"
+          files: |
+            test.txt
+            *.jar
+
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Setup .NET
+#        uses: actions/setup-dotnet@v1
+#        with:
+#          dotnet-version: 5.0.x
+#      - name: Restore dependencies
+#        run: dotnet restore
+#      - name: Pack
+#        run: dotnet pack
