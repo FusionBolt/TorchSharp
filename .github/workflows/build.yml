@@ -1,0 +1,45 @@
+name: .NET
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-18.04,windows-2019,macos-10.15]
+        # os: [ubuntu-18.04,windows-2019,macos-10.15]
+    steps:
+      - name: 'mk text'
+        run: |
+          touch test.txt
+          echo "mol" > test.txt
+
+      - name: 'win'
+        if: runner.os == 'Windows'
+        run: |
+          touch test_win.txt
+          echo "mol win" > test.txt
+          echo "mol win" > test_win.txt
+
+      - name: 'linux'
+        if: runner.os == 'Linux'
+        run: |
+          touch test_linux.txt
+          echo "mol linux" > test.txt
+          echo "mol linux" > test_linux.txt
+
+      - name: 'mac'
+        if: runner.os == 'Macos'
+        run: |
+          touch test_mac.txt
+          echo "mol mac" > test.txt
+          echo "mol mac" > test_mac.txt
+
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v2.2.2
+        with:
+          name: nncase-${{matrix.os}}-x86_64
+          path: ${{github.workspace}}
+          if-no-files-found: error
