@@ -61,7 +61,7 @@ add_library(LibTorchSharp SHARED ${SOURCES} ${RESOURCES} )
 
 target_link_libraries(LibTorchSharp
 	"-Wl,--whole-archive"
-	${TORCH_LIBRARIES}
+	${TORCH_STATIC_LIBS}
 	"-Wl,--no-whole-archive")
 
 set_property(TARGET LibTorchSharp PROPERTY CXX_STANDARD 14)
